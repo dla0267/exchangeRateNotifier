@@ -4,6 +4,7 @@ from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.chrome.service import Service
 import validators
 import OutputHandlerInterface
+import schedule
 
 def scrapeExchangeRateFromWebsite():
     url = "https://www.bloomberg.com/quote/USDKRW:CUR"
@@ -27,6 +28,14 @@ def scrapeExchangeRateFromWebsite():
     else:
         print("Invalid url")
 
+def test():
+    print("Testing")
 
 if __name__ == '__main__':
-    scrapeExchangeRateFromWebsite()
+    # scrapeExchangeRateFromWebsite()
+    schedule.every(5).seconds.do(scrapeExchangeRateFromWebsite)
+
+    while True:
+        # Checks whether a scheduled task
+        # is pending to run or not
+        schedule.run_pending()
