@@ -32,8 +32,7 @@ def test():
     print("Testing")
 
 if __name__ == '__main__':
-    # scrapeExchangeRateFromWebsite()
-    schedule.every(5).seconds.do(scrapeExchangeRateFromWebsite)
+    schedule.every(1).hour.do(scrapeExchangeRateFromWebsite)
 
     while True:
         # Checks whether a scheduled task
