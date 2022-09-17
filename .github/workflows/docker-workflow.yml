@@ -1,0 +1,74 @@
+name: Release
+on:
+  pull_request:
+    branches: [main]
+env:
+  RELEASE_REVISION: "pr-${{ github.event.pull_request.number }}-${{ github.event.pull_request.head.sha }}"
+  SLACK_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL}}
+  DOCKER_USERNAME: ${{ secrets.DOCKERHUB_USERNAME}}
+  DOCKER_PASSWORD: ${{ secrets.DOCKERHUB_PASSWORD}}
+  KUBE_NAMESPACE: exchange-rate-notifier
+  ECR_REPOSITORY: exchange-rate-notifier
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  AWS_REGION: ${{ secrets.AWS_REGION }}
+
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Cancel previous runs
+        uses: styfle/cancel-workflow-action@0.4.1
+        with:
+          access_token: ${{ github.token }}
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+      - name: Login to AWS ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+      - name: Set up Docker buildx
+        uses: docker/setup-buildx-action@v2
+      - namee: Docker cache layers
+        uses: actions/cache@v2
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-single-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-single-buildx
+      - name: Build and Push Image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          RELEASE_IMAGE: ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ env.RELEASE_REVISION }}
+        uses: docker/build-push-action@v3
+        run: |
+          docker buildx create --use
+
+          docker buildx build \                                
+            --cache-from=type=local,src=/tmp/.buildx-cache \   
+            --cache-to=type=local,dest=/tmp/.buildx-cache-new \
+            --tag ${{ env.RELEASE_IMAGE }} \                           
+            --target release \                                 
+            --push \                                           
+            .                                                  
+
+          rm -rf /tmp/.buildx-cache
+          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
+#      - name: Deploy to Kubernetest cluster
+      - name: Discord notification
+        uses: rtCammp/action-slack-notify@master
+        env:
+          SLACK_CHANNEL: release
+          SLACK_MESSAGE: 'Just deployed exchange-rate-notifier!'
+          SLACK_TITLE: 'Deploy'
+          SLACK_USERNAME: 'ayy'
+#          SLACK_ICON: "[icon URL]"
+          SLACK_COLOR: '#228B22'
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
+          MSG_MINIMAL: true

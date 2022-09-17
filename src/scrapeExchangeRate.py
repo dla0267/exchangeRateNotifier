@@ -32,7 +32,11 @@ def test():
     print("Testing")
 
 if __name__ == '__main__':
+<<<<<<< Updated upstream
     schedule.every(1).hour.do(scrapeExchangeRateFromWebsite)
+=======
+    schedule.every(2).minutes.do(scrapeExchangeRateFromWebsite)
+>>>>>>> Stashed changes
 
     while True:
         # Checks whether a scheduled task
