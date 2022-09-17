@@ -34,7 +34,7 @@ def scrapeExchangeRateFromWebsite():
     driver.close()
 
 if __name__ == '__main__':
-    schedule.every(5).seconds.do(scrapeExchangeRateFromWebsite)
+    schedule.every(2).minutes.do(scrapeExchangeRateFromWebsite)
 
     while True:
         # Checks whether a scheduled task

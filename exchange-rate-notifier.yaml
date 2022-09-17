@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: exchange-rate-notifier-deployment
+  namespace: exchange-rate-notifier
+  labels:
+    app: exchange-rate-notifier
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: exchange-rate-notifier
+  template:
+    metadata:
+      labels:
+        app: exchange-rate-notifier
+    spec:
+      containers:
+      - name: app
+        image: 733350974914.dkr.ecr.us-west-2.amazonaws.com/exchange-rate-notifier:latest
+        ports:
+          - containerPort: 80
